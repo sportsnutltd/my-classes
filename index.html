@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sports Nut - My Classes</title>
+<style>
+  :root {
+    --navy: #1F2A44; --navy-soft: #E8EBF3; --lavender: #E4DFF5; --lav-soft: #F4F2FB; --ink: #2B2B2B;
+    --muted: #6B7280; --line: #D9DCE3; --bg: #F6F7FB; --teal: #0F8F80; --teal-soft: #DDF3EF; --danger: #A33A3A;
+    --red-soft: #FBE3E3; --red: #9B2C2C; --amber-soft: #FFF1D6; --amber: #8A5A00;
+    --slow: #7A4E9E; --slow-soft: #EFE6F7; --fast: #0F7A8F; --fast-soft: #DFF1F5;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif; font-size: 16px; }
+  header { background: var(--navy); color: #fff; padding: 12px 16px; display: flex; align-items: center; gap: 10px; }
+  header h1 { margin: 0; font-size: 19px; flex: 1; }
+  header button { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.5);
+    border-radius: 8px; padding: 6px 12px; font: inherit; font-size: 14px; cursor: pointer; }
+  main { max-width: 900px; margin: 0 auto; padding: 16px; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin-bottom: 14px; }
+  label { display: block; font-weight: 600; margin: 12px 0 6px; }
+  input[type=password], select, textarea { width: 100%; font: inherit; font-size: 18px; padding: 12px;
+    border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+  textarea { font-size: 16px; min-height: 80px; }
+  .check { display: flex; gap: 8px; align-items: center; font-weight: 400; margin-top: 12px; }
+  .check input { width: 20px; height: 20px; }
+  .btn { background: var(--navy); color: #fff; border: none; border-radius: 12px; padding: 14px 20px;
+    font: inherit; font-weight: 700; font-size: 17px; width: 100%; margin-top: 14px; cursor: pointer; }
+  .btn:disabled { opacity: .5; }
+  .btn.light { background: var(--navy-soft); color: var(--navy); }
+  .err { color: var(--danger); font-weight: 600; min-height: 1.2em; margin-top: 10px; }
+  .muted { color: var(--muted); font-size: 14px; }
+  .hidden { display: none !important; }
+
+  .bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
+  .bar select { flex: 1 1 220px; font-size: 17px; padding: 10px; }
+  .updated { font-size: 13px; color: var(--muted); }
+  .updated button { background: none; border: none; color: var(--navy); font: inherit; font-size: 13px;
+    font-weight: 700; text-decoration: underline; cursor: pointer; padding: 0; }
+  .summary { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: #fff; border: 1px solid var(--line);
+    border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; }
+  .summary b { font-size: 17px; }
+  .summary .check { margin: 0 0 0 auto; font-size: 15px; }
+  .key { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--muted); margin: -4px 0 14px; }
+
+  .class { background: #fff; border: 1px solid var(--line); border-radius: 14px; margin-bottom: 16px; overflow: hidden; }
+  .chead { background: var(--lavender); padding: 10px 14px; }
+  .chead b { font-size: 17px; }
+  .chead .muted { color: #555; }
+  .sw { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; padding: 12px 14px; border-top: 1px solid var(--line); }
+  .sw:first-of-type { border-top: none; }
+  .sw.red { background: #FFF8F8; border-left: 5px solid #D9534F; }
+  .sw.amber { background: #FFFCF4; border-left: 5px solid #E0A12E; }
+  .sw .nm { font-weight: 700; font-size: 17px; }
+  .sw .pct { text-align: right; font-size: 24px; font-weight: 800; color: var(--navy); line-height: 1; }
+  .sw .pct small { display: block; font-size: 11px; font-weight: 600; color: var(--muted); margin-top: 2px; }
+  .meter { grid-column: 1 / -1; height: 8px; background: var(--navy-soft); border-radius: 6px; overflow: hidden; }
+  .meter i { display: block; height: 100%; background: var(--navy); border-radius: 6px; }
+  .info { grid-column: 1 / -1; font-size: 14px; display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; }
+  .chip { display: inline-block; font-size: 13px; font-weight: 700; border-radius: 8px; padding: 2px 9px; }
+  .c-red { background: var(--red-soft); color: var(--red); }
+  .c-amber { background: var(--amber-soft); color: var(--amber); }
+  .c-ok { background: var(--teal-soft); color: #0B6B60; }
+  .c-new { background: var(--navy-soft); color: var(--navy); }
+  .ctx { color: #444; }
+  .trk { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
+  .trk button { flex: 1 1 130px; border-radius: 10px; padding: 8px 10px; font: inherit; font-size: 14px; font-weight: 700;
+    cursor: pointer; background: #fff; }
+  .t-slow { color: var(--slow); border: 2px solid var(--slow); }
+  .t-fast { color: var(--fast); border: 2px solid var(--fast); }
+  .t-slow.on { background: var(--slow); color: #fff; }
+  .t-fast.on { background: var(--fast); color: #fff; }
+  .trk button:disabled { opacity: .35; cursor: default; }
+  .trk button.on:disabled { opacity: 1; }
+  .flagged { grid-column: 1 / -1; font-size: 13px; color: var(--muted); }
+  .empty { text-align: center; padding: 30px 10px; }
+
+  .modal-bg { position: fixed; inset: 0; background: rgba(20,24,35,.55); display: none;
+    align-items: center; justify-content: center; padding: 16px; z-index: 20; }
+  .modal-bg.show { display: flex; }
+  .modal { background: #fff; border-radius: 16px; padding: 20px; width: 100%; max-width: 480px; }
+  .modal h3 { margin: 0 0 6px; }
+  .modal .row { display: flex; gap: 10px; } .modal .row .btn { flex: 1; }
+  @media (min-width: 700px) {
+    .sw { grid-template-columns: 1fr 90px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Sports Nut &middot; My Classes</h1>
+  <button id="btnOut" class="hidden">Log out</button>
+</header>
+<main>
+  <section id="scrLogin" class="card">
+    <h2 style="margin-top:0">Log in</h2>
+    <p class="muted">Use the same teacher password as the swim times page.</p>
+    <label for="pw">Password</label>
+    <input type="password" id="pw" autocomplete="current-password">
+    <label class="check"><input type="checkbox" id="remember" checked> Remember me on this tablet</label>
+    <div class="err" id="err"></div>
+    <button class="btn" id="btnLogin">Log in</button>
+  </section>
+
+  <section id="scrMain" class="hidden">
+    <div class="bar">
+      <select id="teacher" aria-label="Teacher"></select>
+      <span class="updated"><span id="upd"></span> &middot; <button id="btnRefresh">Refresh</button></span>
+    </div>
+    <div id="pickNote" class="card muted hidden">Choose your name above to see your classes.</div>
+    <div id="body"></div>
+  </section>
+</main>
+
+<!-- Tracker confirm -->
+<div class="modal-bg" id="fBg">
+  <div class="modal">
+    <h3 id="fTitle"></h3>
+    <p class="muted" id="fText" style="margin-top:0"></p>
+    <label for="fNote" style="margin-top:6px">Note for the office (optional)</label>
+    <textarea id="fNote" maxlength="500" placeholder="e.g. Struggling with breathing - may need a 1:1"></textarea>
+    <div class="err" id="fErr"></div>
+    <div class="row"><button class="btn light" id="fCancel">Cancel</button><button class="btn" id="fSend">Flag and email</button></div>
+  </div>
+</div>
+
+<script>
+/* ===================== SETTINGS ===================== */
+const PAGE_VERSION = '2026-11-01-1';   // changes with every new copy of this page
+const API_URL = 'https://script.google.com/macros/s/AKfycbz7Iu7ANVkAzPmii_GoUY6aUNMoJis6-KhdkUHRhBwxD6JMvTyoW6daJva4AkFZDJo/exec';
+/* ==================================================== */
+
+const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const $ = id => document.getElementById(id);
+const S = { pw: '', teacher: '', classes: [], onlyFlagged: false };
+
+function store(k, v) { try { v === null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} }
+function load(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g,
+  c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function num(v) { const n = parseFloat(String(v).replace('%', '')); return isNaN(n) ? null : n; }
+
+async function api(body) {
+  const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(Object.assign({ password: S.pw }, body)) });
+  return res.json();
+}
+
+function showLogin(msg) {
+  $('scrMain').classList.add('hidden'); $('scrLogin').classList.remove('hidden'); $('btnOut').classList.add('hidden');
+  $('err').textContent = msg || '';
+}
+function stamp(j) {
+  S.loadedAt = Date.now();
+  $('upd').textContent = j.dataDate ? 'Progress as of ' + j.dataDate : 'No progress data yet';
+}
+
+async function login(pw, silent) {
+  $('err').textContent = silent ? '' : 'Checking\u2026';
+  $('btnLogin').disabled = true;
+  try {
+    S.pw = pw;
+    const j = await api({ action: 'login' });
+    if (!j.ok) {
+      if (j.badPassword) store('mc_pw', null);
+      showLogin(j.error || 'Something went wrong.'); return;
+    }
+    if ($('remember').checked) store('mc_pw', pw);
+    const sel = $('teacher');
+    sel.innerHTML = '<option value="">Choose your name\u2026</option>' +
+      j.teachers.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+    $('scrLogin').classList.add('hidden'); $('scrMain').classList.remove('hidden'); $('btnOut').classList.remove('hidden');
+    stamp(j);
+    const last = load('mc_teacher');
+    if (last && j.teachers.includes(last)) { sel.value = last; await loadClasses(last); }
+    else { $('pickNote').classList.remove('hidden'); $('body').innerHTML = ''; }
+  } catch (e) {
+    showLogin('Couldn\'t connect. Please check the internet and try again.');
+  } finally { $('btnLogin').disabled = false; }
+}
+
+async function loadClasses(t, quiet) {
+  if (!t) return;
+  S.teacher = t; store('mc_teacher', t);
+  $('pickNote').classList.add('hidden');
+  if (!quiet) $('body').innerHTML = '<div class="card muted">Loading\u2026</div>';
+  try {
+    const j = await api({ action: 'classes', teacher: t });
+    if (!j.ok) {
+      if (j.badPassword) { store('mc_pw', null); showLogin('The password has changed - please log in again.'); return; }
+      $('body').innerHTML = `<div class="card err">${esc(j.error || 'Something went wrong.')}</div>`; return;
+    }
+    S.classes = j.classes; stamp(j); render();
+  } catch (e) {
+    if (!quiet) $('body').innerHTML = '<div class="card err">Couldn\'t connect. Please check the internet and try again.</div>';
+  }
+}
+
+function flagInfo(s) {
+  if (s.status === 'new' || s.status === 'nodata' || s.gain === '' || s.gain === null) {
+    const n = Number(s.lessons) || 0;
+    return { cls: '', chip: `<span class="chip c-new">${s.status === 'new'
+      ? 'New to level \u2013 ' + n + ' lesson' + (n === 1 ? '' : 's') + ' so far'
+      : 'Not enough lessons yet (' + Math.min(n, 6) + ' of 6)'}</span>`, gain: '' };
+  }
+  const g = num(s.gain);
+  const gtxt = (g > 0 ? '+' : '') + g + '% over last 6 lessons';
+  const missed = Number(s.missed) || 0;
+  const ctx = missed ? `Missed ${missed} lesson${missed > 1 ? 's' : ''} recently` : 'Attending well';
+  if (s.flag === 'red') return { cls: 'red', chip: '<span class="chip c-red">Little or no progress</span>', gain: gtxt, ctx };
+  if (s.flag === 'amber') return { cls: 'amber', chip: '<span class="chip c-amber">Slower than expected</span>', gain: gtxt, ctx };
+  return { cls: '', chip: '<span class="chip c-ok">On track</span>', gain: gtxt };
+}
+
+function render() {
+  const classes = S.classes.slice().sort((a, b) =>
+    DAYS.indexOf(a.day) - DAYS.indexOf(b.day) || String(a.time).localeCompare(String(b.time)) ||
+    String(a.venue).localeCompare(String(b.venue)));
+  const all = classes.flatMap(c => c.swimmers);
+  const red = all.filter(s => s.flag === 'red').length, amber = all.filter(s => s.flag === 'amber').length;
+  if (!classes.length) {
+    $('body').innerHTML = '<div class="card empty muted">No classes found for this teacher in the latest Swimphony download.</div>';
+    return;
+  }
+  let h = `<div class="summary"><span><b>${all.length}</b> swimmers in <b>${classes.length}</b> class${classes.length > 1 ? 'es' : ''}</span>`;
+  if (red || amber) h += `<span>${red ? `<span class="chip c-red">${red} little or no progress</span> ` : ''}${amber ? `<span class="chip c-amber">${amber} slower than expected</span>` : ''}</span>`;
+  else h += '<span class="chip c-ok">No one flagged</span>';
+  h += `<label class="check"><input type="checkbox" id="onlyFlagged" ${S.onlyFlagged ? 'checked' : ''}> Only show flagged</label></div>`;
+  h += '<div class="key"><span>Progress is judged on each swimmer\'s <b>last 6 lessons attended</b> in their level.</span>' +
+       '<span>Normal pace is about 15% over 6 lessons.</span></div>';
+  classes.forEach((c, ci) => {
+    let list = c.swimmers.slice().sort((a, b) => {
+      const rank = s => s.flag === 'red' ? 0 : s.flag === 'amber' ? 1 : 2;
+      return rank(a) - rank(b) || String(a.name).localeCompare(String(b.name));
+    });
+    if (S.onlyFlagged) list = list.filter(s => s.flag === 'red' || s.flag === 'amber');
+    if (S.onlyFlagged && !list.length) return;
+    h += `<div class="class"><div class="chead"><b>${esc(c.day)} ${esc(c.time)} \u00b7 ${esc(String(c.venue).replace(' School', ''))}</b><br>
+      <span class="muted">${esc(c.course)} \u00b7 ${esc(c.teachers)} \u00b7 ${c.swimmers.length} swimmer${c.swimmers.length > 1 ? 's' : ''}</span></div>`;
+    list.forEach(s => {
+      const f = flagInfo(s), p = Math.max(0, Math.min(100, num(s.pct) || 0)), t = s.tracker;
+      h += `<div class="sw ${f.cls}"><div><div class="nm">${esc(s.name)}</div></div>
+        <div class="pct">${esc(num(s.pct) === null ? s.pct : num(s.pct))}%<small>current</small></div>
+        <div class="meter"><i style="width:${p}%"></i></div>
+        <div class="info">${f.chip}${f.gain ? `<span>${esc(f.gain)}</span>` : ''}${f.ctx ? `<span class="ctx">\u00b7 ${esc(f.ctx)}</span>` : ''}</div>
+        <div class="trk">
+          <button class="t-slow ${t && t.type === 'slow' ? 'on' : ''}" data-id="${esc(s.id)}" data-t="slow" ${t ? 'disabled' : ''}>${t && t.type === 'slow' ? '\u2713 ' : ''}Slow Tracker</button>
+          <button class="t-fast ${t && t.type === 'fast' ? 'on' : ''}" data-id="${esc(s.id)}" data-t="fast" ${t ? 'disabled' : ''}>${t && t.type === 'fast' ? '\u2713 ' : ''}Fast Tracker</button>
+        </div>
+        ${t ? `<div class="flagged">Flagged as a ${t.type === 'fast' ? 'Fast' : 'Slow'} Tracker by ${esc(t.by)} on ${esc(t.on)}${t.note ? ' \u2013 \u201c' + esc(t.note) + '\u201d' : ''}</div>` : ''}
+      </div>`;
+    });
+    h += '</div>';
+  });
+  $('body').innerHTML = h;
+  $('onlyFlagged').onchange = e => { S.onlyFlagged = e.target.checked; render(); };
+  $('body').querySelectorAll('.trk button').forEach(b => b.onclick = () => openFlag(b.dataset.id, b.dataset.t));
+}
+
+/* ---------- Slow / Fast Tracker ---------- */
+let pending = null;
+function findSwimmer(id) { for (const c of S.classes) for (const s of c.swimmers) if (s.id === id) return { s, c }; return null; }
+function openFlag(id, type) {
+  const x = findSwimmer(id); if (!x) return;
+  pending = { id, type, s: x.s };
+  const label = type === 'fast' ? 'Fast Tracker' : 'Slow Tracker';
+  $('fTitle').textContent = 'Flag ' + x.s.name + ' as a possible ' + label + '?';
+  $('fText').textContent = 'The office will get an email from you about ' + x.s.name + ' (' + x.c.course + ', ' + x.c.day + ' ' + x.c.time +
+    '). It will show as flagged until they move up a level.';
+  $('fNote').value = ''; $('fErr').textContent = '';
+  $('fBg').classList.add('show');
+}
+$('fCancel').onclick = () => $('fBg').classList.remove('show');
+$('fSend').onclick = async () => {
+  if (!pending) return;
+  $('fSend').disabled = true; $('fErr').textContent = 'Sending\u2026';
+  try {
+    const j = await api({ action: 'flag', teacher: S.teacher, id: pending.id, type: pending.type, note: $('fNote').value.trim() });
+    if (j.tracker) pending.s.tracker = j.tracker;
+    if (!j.ok) { $('fErr').textContent = j.error || 'Couldn\'t send. Please try again.'; render(); return; }
+    $('fBg').classList.remove('show'); render();
+  } catch (e) { $('fErr').textContent = 'Couldn\'t send. Please check the internet and try again.'; }
+  finally { $('fSend').disabled = false; }
+};
+
+/* ---------- buttons ---------- */
+$('btnLogin').onclick = () => { const pw = $('pw').value.trim(); if (!pw) { $('err').textContent = 'Please type the password.'; return; } login(pw, false); };
+$('pw').addEventListener('keydown', e => { if (e.key === 'Enter') $('btnLogin').click(); });
+$('teacher').onchange = e => loadClasses(e.target.value);
+$('btnOut').onclick = () => { store('mc_pw', null); S.pw = ''; $('pw').value = ''; showLogin(); };
+document.querySelectorAll('.modal-bg').forEach(bg => bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('show'); }));
+
+/* ---------- keeping the page up to date ---------- */
+async function newerPage() {
+  try {
+    const r = await fetch(location.pathname + '?check=' + Date.now(), { cache: 'no-store' });
+    const m = (await r.text()).match(/PAGE_VERSION = '([^']+)'/);
+    return !!(m && m[1] !== PAGE_VERSION);
+  } catch (e) { return false; }
+}
+let checking = false;
+async function freshen(force) {
+  if (checking || !S.pw || !S.teacher || document.querySelector('.modal-bg.show') || $('scrMain').classList.contains('hidden')) return;
+  if (!force && S.loadedAt && Date.now() - S.loadedAt < 60 * 1000) return;
+  checking = true;
+  try {
+    if (await newerPage()) { location.reload(); return; }
+    await loadClasses(S.teacher, true);
+  } finally { checking = false; }
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) freshen(false); });
+window.addEventListener('focus', () => freshen(false));
+window.addEventListener('pageshow', e => { if (e.persisted) freshen(true); });
+setInterval(() => { if (!document.hidden) freshen(true); }, 5 * 60 * 1000);
+$('btnRefresh').onclick = () => freshen(true);
+
+(function start() {
+  if (API_URL.indexOf('PASTE') === 0) {
+    $('err').textContent = 'Set-up not finished: the web app address hasn\'t been added to this page yet.';
+    $('btnLogin').disabled = true; return;
+  }
+  const pw = load('mc_pw');
+  if (pw) login(pw, true);
+})();
+</script>
+</body>
+</html>
