@@ -52,7 +52,7 @@
   .sw { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; padding: 12px 14px; border-top: 1px solid var(--line); }
   .sw:first-of-type { border-top: none; }
   .sw.red { background: #FFF8F8; border-left: 5px solid #D9534F; }
-  .sw.amber { background: #FFFCF4; border-left: 5px solid #E0A12E; }
+  .sw.blue { background: #F5F9FF; border-left: 5px solid #3B7DD8; }
   .sw .nm { font-weight: 700; font-size: 17px; }
   .sw .pct { text-align: right; font-size: 24px; font-weight: 800; color: var(--navy); line-height: 1; }
   .sw .pct small { display: block; font-size: 11px; font-weight: 600; color: var(--muted); margin-top: 2px; }
@@ -61,7 +61,7 @@
   .info { grid-column: 1 / -1; font-size: 14px; display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; }
   .chip { display: inline-block; font-size: 13px; font-weight: 700; border-radius: 8px; padding: 2px 9px; }
   .c-red { background: var(--red-soft); color: var(--red); }
-  .c-amber { background: var(--amber-soft); color: var(--amber); }
+  .c-blue { background: #E1ECFB; color: #1D4E9E; }
   .c-ok { background: var(--teal-soft); color: #0B6B60; }
   .c-new { background: var(--navy-soft); color: var(--navy); }
   .ctx { color: #444; }
@@ -128,13 +128,13 @@
 
 <script>
 /* ===================== SETTINGS ===================== */
-const PAGE_VERSION = '2026-11-01-2';   // changes with every new copy of this page
+const PAGE_VERSION = '2026-11-01-3';   // changes with every new copy of this page
 const API_URL = 'https://script.google.com/macros/s/AKfycbz7Iu7ANVkAzPmii_GoUY6aUNMoJis6-KhdkUHRhBwxD6JMvTyoW6daJva4AkFZDJo/exec';
 /* ==================================================== */
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const $ = id => document.getElementById(id);
-const S = { pw: '', teacher: '', classes: [], onlyFlagged: false, window: 5 };
+const S = { pw: '', teacher: '', classes: [], showAll: false, window: 6, red: 6, blue: 30 };
 
 function store(k, v) { try { v === null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} }
 function load(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
@@ -154,6 +154,8 @@ function showLogin(msg) {
 function stamp(j) {
   S.loadedAt = Date.now();
   if (j.window) S.window = Number(j.window) || S.window;
+  if (j.red) S.red = Number(j.red) || S.red;
+  if (j.blue) S.blue = Number(j.blue) || S.blue;
   $('upd').textContent = j.dataDate ? 'Progress as of ' + j.dataDate : 'No progress data yet';
 }
 
@@ -207,11 +209,11 @@ function flagInfo(s) {
   }
   const g = num(s.gain);
   const gtxt = (g > 0 ? '+' : '') + g + '% over last ' + S.window + ' lessons';
-  const missed = Number(s.missed) || 0;
-  const ctx = missed ? `Missed ${missed} lesson${missed > 1 ? 's' : ''} recently` : 'Attending well';
-  if (s.flag === 'red') return { cls: 'red', chip: '<span class="chip c-red">Little or no progress</span>', gain: gtxt, ctx };
-  if (s.flag === 'amber') return { cls: 'amber', chip: '<span class="chip c-amber">Slower than expected</span>', gain: gtxt, ctx };
-  return { cls: '', chip: '<span class="chip c-ok">On track</span>', gain: gtxt };
+  const at = Number(s.attended) || 0, cu = Number(s.catchups) || 0;
+  const ctx = 'Attended ' + at + ' of last ' + S.window + (cu ? ' (' + cu + ' of which ' + (cu > 1 ? 'were catch-ups' : 'was a catch-up') + ')' : '');
+  if (s.flag === 'red') return { cls: 'red', chip: '<span class="chip c-red">Little or no percentage change</span>', gain: gtxt, ctx };
+  if (s.flag === 'blue') return { cls: 'blue', chip: '<span class="chip c-blue">Faster percentage increase than expected</span>', gain: gtxt, ctx };
+  return { cls: '', chip: '', gain: gtxt, ctx };
 }
 
 function render() {
@@ -219,24 +221,28 @@ function render() {
     DAYS.indexOf(a.day) - DAYS.indexOf(b.day) || String(a.time).localeCompare(String(b.time)) ||
     String(a.venue).localeCompare(String(b.venue)));
   const all = classes.flatMap(c => c.swimmers);
-  const red = all.filter(s => s.flag === 'red').length, amber = all.filter(s => s.flag === 'amber').length;
+  const red = all.filter(s => s.flag === 'red').length, blue = all.filter(s => s.flag === 'blue').length;
   if (!classes.length) {
     $('body').innerHTML = '<div class="card empty muted">No classes found for this teacher in the latest Swimphony download.</div>';
     return;
   }
   let h = `<div class="summary"><span><b>${all.length}</b> swimmers in <b>${classes.length}</b> class${classes.length > 1 ? 'es' : ''}</span>`;
-  if (red || amber) h += `<span>${red ? `<span class="chip c-red">${red} little or no progress</span> ` : ''}${amber ? `<span class="chip c-amber">${amber} slower than expected</span>` : ''}</span>`;
+  if (red || blue) h += `<span>${red ? `<span class="chip c-red">${red} little or no change</span> ` : ''}${blue ? `<span class="chip c-blue">${blue} faster than expected</span>` : ''}</span>`;
   else h += '<span class="chip c-ok">No one flagged</span>';
-  h += `<label class="check"><input type="checkbox" id="onlyFlagged" ${S.onlyFlagged ? 'checked' : ''}> Only show flagged</label></div>`;
-  h += '<div class="key"><span>Progress is judged on each swimmer\'s <b>last ' + S.window + ' lessons attended</b> in their level.</span>' +
-       '<span>Normal pace is about ' + (Math.round(S.window * 2.5 * 10) / 10) + '% over ' + S.window + ' lessons.</span></div>';
+  h += `<label class="check"><input type="checkbox" id="showAll" ${S.showAll ? 'checked' : ''}> Show all my swimmers</label></div>`;
+  h += '<div class="key"><span>Based on each swimmer\'s <b>last ' + S.window + ' lessons</b> in their level:</span>' +
+       '<span><b style="color:#9B2C2C">Red</b> = gained under ' + S.red + '%</span>' +
+       '<span><b style="color:#1D4E9E">Blue</b> = gained over ' + S.blue + '%</span></div>';
+  if (!S.showAll && !red && !blue) {
+    h += '<div class="card empty muted">None of your swimmers are flagged right now.<br>Tick <b>Show all my swimmers</b> to see everyone.</div>';
+  }
   classes.forEach((c, ci) => {
     let list = c.swimmers.slice().sort((a, b) => {
-      const rank = s => s.flag === 'red' ? 0 : s.flag === 'amber' ? 1 : 2;
+      const rank = s => s.flag === 'red' ? 0 : s.flag === 'blue' ? 1 : 2;
       return rank(a) - rank(b) || String(a.name).localeCompare(String(b.name));
     });
-    if (S.onlyFlagged) list = list.filter(s => s.flag === 'red' || s.flag === 'amber');
-    if (S.onlyFlagged && !list.length) return;
+    if (!S.showAll) list = list.filter(s => s.flag === 'red' || s.flag === 'blue');
+    if (!S.showAll && !list.length) return;
     h += `<div class="class"><div class="chead"><b>${esc(c.day)} ${esc(c.time)} \u00b7 ${esc(String(c.venue).replace(' School', ''))}</b><br>
       <span class="muted">${esc(c.course)} \u00b7 ${esc(c.teachers)} \u00b7 ${c.swimmers.length} swimmer${c.swimmers.length > 1 ? 's' : ''}</span></div>`;
     list.forEach(s => {
@@ -244,7 +250,7 @@ function render() {
       h += `<div class="sw ${f.cls}"><div><div class="nm">${esc(s.name)}</div></div>
         <div class="pct">${esc(num(s.pct) === null ? s.pct : num(s.pct))}%<small>current</small></div>
         <div class="meter"><i style="width:${p}%"></i></div>
-        <div class="info">${f.chip}${f.gain ? `<span>${esc(f.gain)}</span>` : ''}${f.ctx ? `<span class="ctx">\u00b7 ${esc(f.ctx)}</span>` : ''}</div>
+        <div class="info">${f.chip}${f.gain ? `<span>${esc(f.gain)}</span>` : ''}${f.ctx ? `<span class="ctx">${f.gain ? '\u00b7 ' : ''}${esc(f.ctx)}</span>` : ''}</div>
         <div class="trk">
           <button class="t-slow ${t && t.type === 'slow' ? 'on' : ''}" data-id="${esc(s.id)}" data-t="slow" ${t ? 'disabled' : ''}>${t && t.type === 'slow' ? '\u2713 ' : ''}Slow Tracker</button>
           <button class="t-fast ${t && t.type === 'fast' ? 'on' : ''}" data-id="${esc(s.id)}" data-t="fast" ${t ? 'disabled' : ''}>${t && t.type === 'fast' ? '\u2713 ' : ''}Fast Tracker</button>
@@ -255,7 +261,7 @@ function render() {
     h += '</div>';
   });
   $('body').innerHTML = h;
-  $('onlyFlagged').onchange = e => { S.onlyFlagged = e.target.checked; render(); };
+  $('showAll').onchange = e => { S.showAll = e.target.checked; render(); };
   $('body').querySelectorAll('.trk button').forEach(b => b.onclick = () => openFlag(b.dataset.id, b.dataset.t));
 }
 
