@@ -128,13 +128,13 @@
 
 <script>
 /* ===================== SETTINGS ===================== */
-const PAGE_VERSION = '2026-11-01-1';   // changes with every new copy of this page
+const PAGE_VERSION = '2026-11-01-2';   // changes with every new copy of this page
 const API_URL = 'https://script.google.com/macros/s/AKfycbz7Iu7ANVkAzPmii_GoUY6aUNMoJis6-KhdkUHRhBwxD6JMvTyoW6daJva4AkFZDJo/exec';
 /* ==================================================== */
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const $ = id => document.getElementById(id);
-const S = { pw: '', teacher: '', classes: [], onlyFlagged: false };
+const S = { pw: '', teacher: '', classes: [], onlyFlagged: false, window: 5 };
 
 function store(k, v) { try { v === null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} }
 function load(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
@@ -153,6 +153,7 @@ function showLogin(msg) {
 }
 function stamp(j) {
   S.loadedAt = Date.now();
+  if (j.window) S.window = Number(j.window) || S.window;
   $('upd').textContent = j.dataDate ? 'Progress as of ' + j.dataDate : 'No progress data yet';
 }
 
@@ -202,10 +203,10 @@ function flagInfo(s) {
     const n = Number(s.lessons) || 0;
     return { cls: '', chip: `<span class="chip c-new">${s.status === 'new'
       ? 'New to level \u2013 ' + n + ' lesson' + (n === 1 ? '' : 's') + ' so far'
-      : 'Not enough lessons yet (' + Math.min(n, 6) + ' of 6)'}</span>`, gain: '' };
+      : 'Not enough lessons yet (' + Math.min(n, S.window) + ' of ' + S.window + ')'}</span>`, gain: '' };
   }
   const g = num(s.gain);
-  const gtxt = (g > 0 ? '+' : '') + g + '% over last 6 lessons';
+  const gtxt = (g > 0 ? '+' : '') + g + '% over last ' + S.window + ' lessons';
   const missed = Number(s.missed) || 0;
   const ctx = missed ? `Missed ${missed} lesson${missed > 1 ? 's' : ''} recently` : 'Attending well';
   if (s.flag === 'red') return { cls: 'red', chip: '<span class="chip c-red">Little or no progress</span>', gain: gtxt, ctx };
@@ -227,8 +228,8 @@ function render() {
   if (red || amber) h += `<span>${red ? `<span class="chip c-red">${red} little or no progress</span> ` : ''}${amber ? `<span class="chip c-amber">${amber} slower than expected</span>` : ''}</span>`;
   else h += '<span class="chip c-ok">No one flagged</span>';
   h += `<label class="check"><input type="checkbox" id="onlyFlagged" ${S.onlyFlagged ? 'checked' : ''}> Only show flagged</label></div>`;
-  h += '<div class="key"><span>Progress is judged on each swimmer\'s <b>last 6 lessons attended</b> in their level.</span>' +
-       '<span>Normal pace is about 15% over 6 lessons.</span></div>';
+  h += '<div class="key"><span>Progress is judged on each swimmer\'s <b>last ' + S.window + ' lessons attended</b> in their level.</span>' +
+       '<span>Normal pace is about ' + (Math.round(S.window * 2.5 * 10) / 10) + '% over ' + S.window + ' lessons.</span></div>';
   classes.forEach((c, ci) => {
     let list = c.swimmers.slice().sort((a, b) => {
       const rank = s => s.flag === 'red' ? 0 : s.flag === 'amber' ? 1 : 2;
